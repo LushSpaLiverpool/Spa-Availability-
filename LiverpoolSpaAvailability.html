@@ -98,46 +98,41 @@
 </div>
 
 <script>
-// Your Google Sheets CSV link
 const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRpSxD3lcwCcAJAO2LRt8RC7BCGXssw1QIDAjoaX4elUVilHhQWVNLsbjxxKBqQRVfOVZ6b1Y8DnlDY/pub?output=csv";
-// Load and display data
+
 function loadData() {
   fetch(sheetURL)
     .then(res => res.text())
     .then(data => {
-      console.log("Raw Data:", data); // Log raw CSV data
+      console.log("Raw Data:", data);
 
-      // Split the data into rows, skipping the header row
       const rows = data.split("\n").slice(1);
-      console.log("Rows after split:", rows); // Log rows after splitting
+      console.log("Rows after split:", rows);
 
       const grid = document.getElementById("grid");
-      grid.innerHTML = ""; // Clear grid before adding new tiles
+      grid.innerHTML = "";
 
-      // Loop through each row of data
       rows.forEach(row => {
-        if (!row.trim()) return; // Skip empty rows
+        if (!row.trim()) return;
 
         const cols = row.split(",").map(col => col.trim());
-        console.log("Columns:", cols); // Log each row's columns
+        console.log("Columns:", cols);
 
-        // Get treatment and duration from columns
-        const treatment = cols[0] || "Unknown Treatment"; // Default if missing
-        const duration = cols[1] || "N/A"; // Default if missing
-        if (!treatment) return; // Skip if no treatment
+        const treatment = cols[0] || "Unknown Treatment";
+        const duration = cols[1] || "N/A";
+        if (!treatment) return;
 
-        // Handle missing values and count spaces
         let totalSpaces = 0;
         let spacesAvailable = [];
 
-        for (let i = 3; i < cols.length; i += 2) {
-          let time = cols[i] || "N/A"; // Default if time is missing
-          let spaces = Number(cols[i + 1]) || 0; // Default to 0 if spaces are missing
+        // FIX: start at cols[2] for time slots
+        for (let i = 2; i < cols.length; i += 2) {
+          let time = cols[i] || "N/A";
+          let spaces = Number(cols[i + 1]) || 0;
           totalSpaces += spaces;
           spacesAvailable.push({ time, spaces });
         }
 
-        // Determine status based on available spaces
         let status = "available";
         if (totalSpaces === 0) status = "full";
         else if (totalSpaces <= 2) status = "limited";
@@ -153,7 +148,6 @@ function loadData() {
         grid.appendChild(tile);
       });
 
-      // If no treatments were added, display a message
       if (grid.children.length === 0) {
         grid.innerHTML = "<p>No treatments available</p>";
       }
@@ -165,44 +159,32 @@ function loadData() {
     });
 }
 
-// Show modal with time slots
 function showSlots(spacesAvailable, treatment, duration) {
   let html = `<h2>${treatment}</h2><p>${duration} min</p>`;
-
   spacesAvailable.forEach(slot => {
-    let time = slot.time;
-    let spaces = slot.spaces;
-
-    if (spaces === 0) {
-      html += `<div class="slot">${time} — FULL</div>`;
+    if (slot.spaces === 0) {
+      html += `<div class="slot">${slot.time} — FULL</div>`;
     } else {
-      html += `<div class="slot">${time} — ${spaces} spaces</div>`;
+      html += `<div class="slot">${slot.time} — ${slot.spaces} spaces</div>`;
     }
   });
-
   html += `<br><button onclick="closeModal()">Close</button>`;
   document.getElementById("modalContent").innerHTML = html;
   document.getElementById("modal").style.display = "block";
 }
 
-// Close modal
 function closeModal() {
   document.getElementById("modal").style.display = "none";
 }
 
-// Close modal if clicking outside
-window.onclick = function (event) {
+window.onclick = function(event) {
   if (event.target == document.getElementById("modal")) {
     closeModal();
   }
 }
 
-// Initial load
 loadData();
-
-// Auto-refresh every 60 seconds
 setInterval(loadData, 60000);
-
 </script>
 
 </body>
